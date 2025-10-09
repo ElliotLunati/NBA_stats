@@ -1,0 +1,16 @@
+# NBA Statistics Data Collection
+# Install with: pip install -r requirements.txt
+
+# NBA API
+nba-api
+
+# Web Scraping
+selenium
+beautifulsoup4
+requests
+
+# Data Analysis
+pandas
+
+# Chrome WebDriver (si nécessaire)
+# webdriver-manager
