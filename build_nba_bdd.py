@@ -461,7 +461,7 @@ def scrape_mvp_data(filename='./data/MVP/nba_mvp_history.csv'):
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        print("  🔧 Initialisation du navigateur (mode invisible)...")
+        print(" Initialisation du navigateur")
         
         # Créer le driver
         driver = webdriver.Chrome(options=chrome_options)
@@ -469,11 +469,11 @@ def scrape_mvp_data(filename='./data/MVP/nba_mvp_history.csv'):
         # Masquer l'automation
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
-        print("   Chargement de la page...")
+        print("Chargement de la page...")
         driver.get(url)
         
         # Attendre que le tableau soit chargé
-        print("   Attente du chargement du tableau...")
+        print("Attente du chargement du tableau...")
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, "mvp_NBA"))
         )
@@ -491,18 +491,18 @@ def scrape_mvp_data(filename='./data/MVP/nba_mvp_history.csv'):
             print("   Tableau des MVP non trouvé")
             return None
         
-        print("   Tableau trouvé")
+        print("Tableau trouvé")
         
         # Extraire les données
         data = []
         tbody = table.find('tbody')
         
         if not tbody:
-            print("   Corps du tableau non trouvé")
+            print("Corps du tableau non trouvé")
             return None
         
         rows = tbody.find_all('tr')
-        print(f"   {len(rows)} lignes trouvées")
+        print(f"{len(rows)} lignes trouvées")
         
         for row in rows:
             # Ignorer les lignes d'en-tête répétées
@@ -558,7 +558,7 @@ def scrape_mvp_data(filename='./data/MVP/nba_mvp_history.csv'):
                 })
         
         if not data:
-            print("   Aucune donnée extraite")
+            print("Aucune donnée extraite")
             return None
         
         df = pd.DataFrame(data)
@@ -570,7 +570,7 @@ def scrape_mvp_data(filename='./data/MVP/nba_mvp_history.csv'):
         
         # Exporter en CSV
         df.to_csv(filename, index=False, encoding='utf-8-sig')
-        print(f"   {len(df)} MVP récupérés - Fichier '{filename}' créé!")
+        print(f"{len(df)} MVP récupérés - Fichier '{filename}' créé!")
         print(f"Période couverte: {df['Season'].iloc[-1]} à {df['Season'].iloc[0]}")
         
         return df
@@ -588,11 +588,12 @@ def scrape_mvp_data(filename='./data/MVP/nba_mvp_history.csv'):
             print("Navigateur fermé")
 
 
-def merge_players_and_salaries(start_year=2000, end_year=2025, output_file='./data/merged_players_salaries.csv'):
+def merge_data(start_year=2000, end_year=2025, output_file='./data/merged_data.csv'):
     """
     Fusionne les statistiques des joueurs (Regular Season) avec leurs salaires pour chaque année,
     puis combine toutes les années en un seul fichier CSV. Ajoute une colonne 'adjusted_salary'
-    qui ajuste les salaires en fonction de l'inflation jusqu'à end_year.
+    qui ajuste les salaires en fonction de l'inflation jusqu'à end_year; ajoute aussi la colonne 'TEAM_W_PCT'
+    (winrate de l'équipe).
     
     Args:
         start_year (int): Année de début (ex: 2000 pour la saison 1999-00)
@@ -631,7 +632,7 @@ def merge_players_and_salaries(start_year=2000, end_year=2025, output_file='./da
         2022: 1.11,
         2023: 1.06,
         2024: 1.03,
-        2025: 1.00  # Pas d'ajustement pour l'année en cours
+        2025: 1.00  
     }
     
     print(f"{'='*60}")
@@ -666,6 +667,12 @@ def merge_players_and_salaries(start_year=2000, end_year=2025, output_file='./da
             df_players = pd.read_csv(players_file)
             df_salaries = pd.read_csv(salaries_file)
             
+            # Charger les statistiques des équipes pour obtenir le W_PCT
+            teams_file = f"./data/{season_str}/Regular_Season/nba_teams_stats_{season_str}_Regular_Season.csv"
+            df_teams = None
+            if os.path.exists(teams_file):
+                df_teams = pd.read_csv(teams_file)
+            
             # Fusionner sur PLAYER_NAME = Player (inner join pour drop les non-correspondances)
             df_merged = pd.merge(
                 df_players,
@@ -674,6 +681,15 @@ def merge_players_and_salaries(start_year=2000, end_year=2025, output_file='./da
                 right_on='Player',
                 how='inner'
             )
+            
+            # Ajouter le W_PCT des équipes si disponible
+            if df_teams is not None and 'W_PCT' in df_teams.columns and 'TEAM_ID' in df_teams.columns:
+                # Créer un dictionnaire TEAM_ID -> W_PCT
+                team_wpct = df_teams.set_index('TEAM_ID')['W_PCT'].to_dict()
+                # Ajouter la colonne TEAM_W_PCT
+                df_merged['TEAM_W_PCT'] = df_merged['TEAM_ID'].map(team_wpct)
+            else:
+                df_merged['TEAM_W_PCT'] = None
             
             # Ajouter la colonne year
             df_merged['Year'] = season_str
