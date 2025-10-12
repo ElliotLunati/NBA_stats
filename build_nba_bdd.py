@@ -146,6 +146,32 @@ def export_teams_stats_to_csv(season='2023-24', season_type='Regular Season', fi
         # Convertir en DataFrame
         df = team_stats.get_data_frames()[0]
         
+        initial_total = len(df)
+        
+        # Filtrer pour ne garder que les équipes NBA (exclure WNBA et G-League)
+        if 'TEAM_ID' in df.columns:
+            df = df[df['TEAM_ID'].astype(str).str.startswith('16106127')]
+            nba_teams = len(df)
+            filtered_out = initial_total - nba_teams
+            if filtered_out > 0:
+                print(f"  {filtered_out} équipe(s) non-NBA filtrée(s) (WNBA/G-League)")
+        
+        # Supprimer les lignes avec TEAM_NAME vide ou NaN
+        if 'TEAM_NAME' in df.columns:
+            initial_count = len(df)
+            df = df[df['TEAM_NAME'].notna() & (df['TEAM_NAME'] != '')]
+            removed_count = initial_count - len(df)
+            if removed_count > 0:
+                print(f"  {removed_count} ligne(s) avec TEAM_NAME vide supprimée(s)")
+        
+        # Supprimer les doublons basés sur TEAM_ID pour éviter les ID dupliqués
+        if 'TEAM_ID' in df.columns:
+            initial_count = len(df)
+            df = df.drop_duplicates(subset=['TEAM_ID'], keep='first')
+            removed_count = initial_count - len(df)
+            if removed_count > 0:
+                print(f"  {removed_count} doublon(s) TEAM_ID supprimé(s)")
+        
         # Créer les répertoires si nécessaire
         file_dir = os.path.dirname(filename)
         if file_dir and not os.path.exists(file_dir):
@@ -153,7 +179,7 @@ def export_teams_stats_to_csv(season='2023-24', season_type='Regular Season', fi
         
         # Exporter en CSV
         df.to_csv(filename, index=False, encoding='utf-8-sig')
-        print(f"\nFichier '{filename}' créé avec succès!")
+        print(f"\nFichier '{filename}' créé avec succès! ({len(df)} équipes NBA)")
 
         return df
         
@@ -560,3 +586,140 @@ def scrape_mvp_data(filename='./data/MVP/nba_mvp_history.csv'):
         if driver:
             driver.quit()
             print("Navigateur fermé")
+
+
+def merge_players_and_salaries(start_year=2000, end_year=2025, output_file='./data/merged_players_salaries.csv'):
+    """
+    Fusionne les statistiques des joueurs (Regular Season) avec leurs salaires pour chaque année,
+    puis combine toutes les années en un seul fichier CSV. Ajoute une colonne 'adjusted_salary'
+    qui ajuste les salaires en fonction de l'inflation jusqu'à end_year.
+    
+    Args:
+        start_year (int): Année de début (ex: 2000 pour la saison 1999-00)
+        end_year (int): Année de fin (ex: 2025 pour la saison 2024-25)
+        output_file (str): Chemin du fichier de sortie final
+    
+    Returns:
+        pd.DataFrame: DataFrame combiné de toutes les années
+    """
+    # Taux d'inflation annuels moyens aux États-Unis (source: Bureau of Labor Statistics)
+    # Format: année -> taux d'inflation cumulatif depuis cette année jusqu'à 2024
+    inflation_factors = {
+        1999: 1.94,  # De 1999 à 2024
+        2000: 1.88,
+        2001: 1.83,
+        2002: 1.80,
+        2003: 1.76,
+        2004: 1.72,
+        2005: 1.66,
+        2006: 1.61,
+        2007: 1.56,
+        2008: 1.50,
+        2009: 1.51,
+        2010: 1.49,
+        2011: 1.44,
+        2012: 1.41,
+        2013: 1.39,
+        2014: 1.37,
+        2015: 1.37,
+        2016: 1.35,
+        2017: 1.32,
+        2018: 1.29,
+        2019: 1.27,
+        2020: 1.25,
+        2021: 1.20,
+        2022: 1.11,
+        2023: 1.06,
+        2024: 1.03,
+        2025: 1.00  # Pas d'ajustement pour l'année en cours
+    }
+    
+    print(f"{'='*60}")
+    print(f" Fusion des données joueurs + salaires")
+    print(f" De {start_year-1}-{str(start_year)[-2:]} à {end_year-1}-{str(end_year)[-2:]}")
+    print(f" Ajustement des salaires à l'inflation de {end_year-1}")
+    print(f"{'='*60}\n")
+    
+    all_merged_data = []
+    success_count = 0
+    
+    for year in range(start_year, end_year + 1):
+        season_str = f"{year-1}-{str(year)[-2:]}"
+        
+        # Chemins des fichiers
+        players_file = f"./data/{season_str}/Regular_Season/nba_players_stats_{season_str}_Regular_Season.csv"
+        salaries_file = f"./data/{season_str}/Salaries/nba_salaries_{season_str}.csv"
+        
+        print(f"[{year-start_year+1}/{end_year-start_year+1}] Saison {season_str}...", end=" ")
+        
+        # Vérifier que les deux fichiers existent
+        if not os.path.exists(players_file):
+            print(f" Fichier joueurs non trouvé")
+            continue
+        
+        if not os.path.exists(salaries_file):
+            print(f" Fichier salaires non trouvé")
+            continue
+        
+        try:
+            # Charger les données
+            df_players = pd.read_csv(players_file)
+            df_salaries = pd.read_csv(salaries_file)
+            
+            # Fusionner sur PLAYER_NAME = Player (inner join pour drop les non-correspondances)
+            df_merged = pd.merge(
+                df_players,
+                df_salaries,
+                left_on='PLAYER_NAME',
+                right_on='Player',
+                how='inner'
+            )
+            
+            # Ajouter la colonne year
+            df_merged['Year'] = season_str
+            
+            # Calculer le salaire ajusté à l'inflation
+            # Obtenir le facteur d'inflation pour l'année de la saison
+            season_year = year - 1  # Année de début de la saison (ex: 1999 pour 1999-00)
+            inflation_factor = inflation_factors.get(season_year, 1.0)
+            
+            # Calculer le salaire ajusté
+            df_merged['adjusted_salary'] = (df_merged['Salary'] * inflation_factor).round(0).astype(int)
+            
+            # Supprimer la colonne 'Player' dupliquée (on garde PLAYER_NAME)
+            if 'Player' in df_merged.columns:
+                df_merged = df_merged.drop(columns=['Player'])
+            
+            all_merged_data.append(df_merged)
+            success_count += 1
+            
+            print(f" {len(df_merged)} joueurs fusionnés")
+            
+        except Exception as e:
+            print(f" Erreur: {e}")
+            continue
+    
+    if not all_merged_data:
+        print("\n Aucune donnée à fusionner")
+        return None
+    
+    # Combiner tous les DataFrames
+    print(f"\n{'='*60}")
+    print(f" Combinaison de toutes les saisons...")
+    df_final = pd.concat(all_merged_data, ignore_index=True)
+    
+    # Créer les répertoires si nécessaire
+    file_dir = os.path.dirname(output_file)
+    if file_dir and not os.path.exists(file_dir):
+        os.makedirs(file_dir, exist_ok=True)
+    
+    # Sauvegarder le fichier final
+    df_final.to_csv(output_file, index=False, encoding='utf-8-sig')
+    
+    print(f"  Fichier final créé: {output_file}")
+    print(f" Total de lignes: {len(df_final)}")
+    print(f" Saisons fusionnées: {success_count}/{end_year-start_year+1}")
+    print(f" Colonnes: {len(df_final.columns)}")
+    print(f"{'='*60}")
+    
+    return df_final
