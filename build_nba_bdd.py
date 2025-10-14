@@ -606,7 +606,7 @@ def merge_data(start_year=2000, end_year=2025, output_file='./data/merged_data.c
     # Taux d'inflation annuels moyens aux États-Unis (source: Bureau of Labor Statistics)
     # Format: année -> taux d'inflation cumulatif depuis cette année jusqu'à 2024
     inflation_factors = {
-        1999: 1.94,  # De 1999 à 2024
+        1999: 1.94,  
         2000: 1.88,
         2001: 1.83,
         2002: 1.80,
@@ -723,6 +723,29 @@ def merge_data(start_year=2000, end_year=2025, output_file='./data/merged_data.c
     print(f"\n{'='*60}")
     print(f" Combinaison de toutes les saisons...")
     df_final = pd.concat(all_merged_data, ignore_index=True)
+    
+    # Trier par joueur et année pour faciliter le calcul
+    df_final = df_final.sort_values(['PLAYER_ID', 'Year'])
+    
+    # Créer une colonne avec le salaire ajusté de l'année suivante pour chaque joueur
+    df_final['next_adjusted_salary'] = df_final.groupby('PLAYER_ID')['adjusted_salary'].shift(-1)
+    
+    # Créer une colonne pour l'équipe de l'année suivante
+    df_final['next_team'] = df_final.groupby('PLAYER_ID')['TEAM_ID'].shift(-1)
+    
+    # Créer la colonne Changed_team (0 si même équipe, 1 si changement, NaN pour la dernière saison)
+    df_final['Changed_team'] = (df_final['TEAM_ID'] != df_final['next_team']).astype(int)
+    # Convertir les NaN (dernière saison du joueur) en NaN pour garder la cohérence
+    df_final.loc[df_final['next_team'].isna(), 'Changed_team'] = None
+    
+    # Supprimer la colonne temporaire next_team
+    df_final = df_final.drop(columns=['next_team'])
+    
+    # Pour chaque joueur, compter le nombre de saisons déjà jouées (y compris la saison actuelle)
+    df_final['YOE'] = df_final.groupby('PLAYER_ID').cumcount() + 1
+    
+    # Remettre dans l'ordre original (optionnel)
+    df_final = df_final.reset_index(drop=True)
     
     # Créer les répertoires si nécessaire
     file_dir = os.path.dirname(output_file)
