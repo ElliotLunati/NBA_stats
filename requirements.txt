@@ -11,6 +11,5 @@ requests
 
 # Data Analysis
 pandas
-
-# Chrome WebDriver (si nécessaire)
-# webdriver-manager
+scikit-learn
+matplotlib
