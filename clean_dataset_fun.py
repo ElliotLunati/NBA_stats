@@ -1,8 +1,6 @@
 """
-Module de nettoyage et d'analyse du dataset NBA.
-
-Ce module contient des fonctions utilitaires pour analyser les corrélations
-entre variables et nettoyer les données NBA.
+Ce module contient des fonctions pour analyser les corrélations
+entre variables, nettoyer les données et le pre-processing.
 """
 
 
