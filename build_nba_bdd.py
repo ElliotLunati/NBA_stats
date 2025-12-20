@@ -762,3 +762,11 @@ def merge_data(start_year=2000, end_year=2025, output_file='./data/merged_data.c
     print(f"{'='*60}")
     
     return df_final
+
+def scrape_nba_bdd(season_types=['Regular Season', 'Playoffs']):
+    # Exemple d'utilisation des fonctions définies ci-dessus
+    export_all_seasons(start_year=1996, end_year=2024, season_types=season_types)
+    export_all_teams_seasons(start_year=1996, end_year=2024, season_types=season_types)
+    export_all_salaries(start_year=2000, end_year=2025)
+    scrape_mvp_data(filename='./data/MVP/nba_mvp_history.csv')
+    merge_data(start_year=2000, end_year=2025, output_file='./data/merged_data.csv')
