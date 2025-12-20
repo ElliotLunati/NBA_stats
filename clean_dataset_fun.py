@@ -520,7 +520,7 @@ def remove_identifier_columns(
     if columns_to_remove is None:
         columns_to_remove = [
             'PLAYER_ID', 'PLAYER_NAME', 'NICKNAME', 'TEAM_ID', 
-            'Team', 'Salary', 'Season', 'Year', 'adjusted_salary', 'Rank'
+            'Team', 'Season', 'Year', 'Salary', 'Rank'
         ]
     
     # Identifier les colonnes existantes à supprimer
