@@ -763,8 +763,13 @@ def merge_data(start_year=2000, end_year=2025, output_file='./data/merged_data.c
     
     return df_final
 
+<<<<<<< HEAD
 def scrape_nba_bdd(season_types=['Regular Season', 'Playoffs']):
     # Exemple d'utilisation des fonctions définies ci-dessus
+=======
+def scrape_all_data(season_types=['Regular Season', 'Playoffs']):
+    
+>>>>>>> c895203f83f8135e28d732ff598bb82f79a11fa1
     export_all_seasons(start_year=1996, end_year=2024, season_types=season_types)
     export_all_teams_seasons(start_year=1996, end_year=2024, season_types=season_types)
     export_all_salaries(start_year=2000, end_year=2025)
