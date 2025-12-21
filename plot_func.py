@@ -16,6 +16,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.lines as mlines
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from numpy import interp
 
 df = pd.read_csv('./data/merged_data.csv')
 
@@ -184,3 +188,212 @@ def plot_desc_salary_cont(x, x_name, nb_inter, y='adjusted_salary',
     else:
         print(f"Les colonnes {x} ou {y} n'existent pas dans le dataset.")
         print(f"Colonnes disponibles : {data.columns.tolist()}")
+
+
+
+
+#################################
+##    Regressions linéaires    ##
+#################################
+
+
+def plot_rls(
+    x,
+    y_pred,
+    reg_func,
+    placement,
+    y='adjusted_salary',
+    color='blue',
+    data=df
+):
+    """
+    x : Variable explicative
+    y : Variable expliquée
+    y_pred : Prédiction de la variable expliquée
+    placement : Localisation de la fenêtre
+    reg_func : Fonction de régression utilisée
+
+    Nuage de points du salaire réel et du salaire prédit
+    par régression linéaire simple en fonction de x.
+    """
+    placement.scatter(
+        data[x],
+        data[y],
+        color=color,
+        alpha=0.5
+    )
+    placement.plot(
+        data[x],
+        data[y_pred],
+        c='red',
+        lw=2
+    )
+    placement.set_xlabel(f'{x}/match')
+    placement.set_ylabel('Salaire ($)')
+    placement.set_title(
+        f'Prédiction Salaire ~ {x} '
+        f'(R² = {reg_func.rsquared:.3f})'
+    )
+    placement.ticklabel_format(style='plain', axis='both')
+
+
+
+
+def plot_error(
+    y_pred,
+    placement,
+    y='adjusted_salary',
+    color='blue',
+    c_line='red',
+    nom_reg='',
+    data=df
+):
+    """
+    y : Variable expliquée
+    y_pred : Prédiction de la variable expliquée
+    placement : Localisation de la fenêtre
+
+    Diagramme de la distribution des erreurs de prédiction du modèle.
+    """
+    errors_func = data[y] - data[y_pred]
+
+    placement.hist(
+        errors_func,
+        bins=50,
+        color=color,
+        edgecolor='black',
+        density=True
+    )
+    placement.set_xlabel('Erreur de prédiction ($)')
+    placement.set_ylabel('Fréquence')
+    placement.set_title('Distribution des erreurs de prédiction')
+    placement.axvline(
+        x=0,
+        color=c_line,
+        linestyle='--',
+        linewidth=2
+    )
+    placement.ticklabel_format(style='plain', axis='x')
+    placement.tick_params(axis='x', rotation=45, labelsize=8)
+
+    print(f"\nStatistiques des erreurs ({nom_reg}) :")
+    print(f"   Erreur moyenne : {errors_func.mean():,.0f}")
+    print(f"   Écart-type des erreurs : {errors_func.std():,.0f}")
+
+
+
+def plot_lowess(
+    x,
+    y_pred,
+    reg_mco,
+    y='adjusted_salary',
+    color='blue',
+    data=df
+):
+    """
+    x : variable explicative
+    y : variable expliquée
+    y_pred : prédiction par le modèle MCO
+    reg_mco : objet regression linéaire utilisé pour RLS
+    data : DataFrame contenant x, y et y_pred
+
+    Graph 1 : Nuage de points de y par rapport à x, avec tendances MCO et LOWESS.
+    Graph 2 : Distribution des erreurs du modèle MCO.
+    Graph 3 : Distribution des erreurs du modèle LOWESS.
+    """
+
+    # Calcul LOWESS
+    lowess = sm.nonparametric.lowess
+    y_lowess = lowess(data[y], data[x], frac=0.3)
+    x_smooth = y_lowess[:, 0]
+    y_smooth = y_lowess[:, 1]
+
+    # Interpolation pour obtenir y_predicted_lowess
+    data['y_predicted_lowess'] = interp(data[x], x_smooth, y_smooth)
+
+    # Création des sous-graphes
+    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+
+    # Graphique 1: Regression Y ~ X
+    plot_rls(x, y_pred, reg_mco, axes[0], y=y, color=color, data=data)
+    axes[0].plot(x_smooth, y_smooth, c='lime', lw=2, label='Courbe LOWESS')
+    axes[0].axvline(
+        x=np.median(data[x]),
+        color='black',
+        linestyle='--',
+        linewidth=2,
+        label='Médiane'
+    )
+    axes[0].axvline(
+        x=np.percentile(data[x], 90),
+        color='black',
+        linestyle='--',
+        linewidth=2,
+        label='Centile 90'
+    )
+    axes[0].legend()
+
+    # Graphique 2: Distribution des erreurs (MCO)
+    plot_error(
+        y_pred,
+        axes[1],
+        y=y,
+        color=color,
+        nom_reg=f"Salaire ~ {x} (MCO)",
+        data=data
+    )
+    axes[1].set_title('Distribution des erreurs de prédiction (MCO)')
+
+    # Graphique 3: Distribution des erreurs (LOWESS)
+    plot_error(
+        'y_predicted_lowess',
+        axes[2],
+        y=y,
+        color=color,
+        c_line='lime',
+        nom_reg=f"Salaire ~ {x} (LOWESS)",
+        data=data
+    )
+    axes[2].set_title('Distribution des erreurs de prédiction (LOWESS)')
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+def plot_rlm(
+    y_pred,
+    placement,
+    y='adjusted_salary',
+    color='blue',
+    data=df
+):
+    """
+    y : Variable expliquée
+    y_pred : Prédiction de la variable expliquée par la RLM
+    placement : Localisation de la fenêtre
+
+    Nuage de points du salaire prédit par rapport au salaire réel.
+    """
+    placement.scatter(
+        data[y],
+        data[y_pred],
+        alpha=0.5,
+        color=color
+    )
+
+    min_salary = data[y].min()
+    max_salary = data[y].max()
+
+    placement.plot(
+        [min_salary, max_salary],
+        [min_salary, max_salary],
+        'r--',
+        lw=2,
+        label='Prédiction parfaite'
+    )
+
+    placement.set_xlabel('Salaire réel ($)')
+    placement.set_ylabel('Salaire prédit ($)')
+    placement.set_title('Prédictions vs valeurs réelles')
+    placement.ticklabel_format(style='plain', axis='both')
