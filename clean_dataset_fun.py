@@ -38,8 +38,8 @@ def find_high_correlations(
         List[Tuple[str, str, float]]: Liste de tuples (variable1, variable2, corrélation)
         
     Example:
-        >>> correlations = find_high_correlations(df, threshold=0.80)
-        >>> print(f"Trouvé {len(correlations)} paires corrélées")
+         correlations = find_high_correlations(df, threshold=0.80)
+         print(f"Trouvé {len(correlations)} paires corrélées")
     """
     # Extraction des variables numériques et calcul de la matrice de corrélation
     correlation_matrix = dataframe.select_dtypes(include=['float64', 'int64']).corr()
@@ -140,12 +140,12 @@ def remove_highly_correlated_features(
         List[str]: Liste des noms de colonnes à supprimer
         
     Example:
-        >>> columns_to_drop = remove_highly_correlated_features(
+         columns_to_drop = remove_highly_correlated_features(
         ...     df, 
         ...     threshold=0.80, 
         ...     protected_cols=['Salary', 'adjusted_salary']
         ... )
-        >>> df_cleaned = df.drop(columns=columns_to_drop)
+         df_cleaned = df.drop(columns=columns_to_drop)
     """
     if protected_cols is None:
         protected_cols = []
@@ -297,8 +297,8 @@ def remove_low_salary_outliers(
         pd.DataFrame: DataFrame nettoyé sans les salaires trop bas
         
     Example:
-        >>> df_clean = remove_low_salary_outliers(df, min_salary=500000)
-        >>> print(f"Lignes restantes: {len(df_clean)}")
+         df_clean = remove_low_salary_outliers(df, min_salary=500000)
+         print(f"Lignes restantes: {len(df_clean)}")
     """
     initial_count = len(dataframe)
     
@@ -345,8 +345,8 @@ def detect_career_end_drops(
         List[int]: Liste des indices à supprimer du DataFrame
         
     Example:
-        >>> indices = detect_career_end_drops(df, drop_threshold=-0.70)
-        >>> df_clean = df.drop(indices)
+         indices = detect_career_end_drops(df, drop_threshold=-0.70)
+         df_clean = df.drop(indices)
     """
     # Trier par joueur et année
     df_sorted = dataframe.sort_values([player_id_col, year_col]).copy()
@@ -419,8 +419,8 @@ def clean_outliers(
         pd.DataFrame: DataFrame nettoyé
         
     Example:
-        >>> df_clean = clean_outliers(df, min_salary=500000, drop_threshold=-0.70)
-        >>> print(f"Dataset final: {len(df_clean)} lignes")
+         df_clean = clean_outliers(df, min_salary=500000, drop_threshold=-0.70)
+         print(f"Dataset final: {len(df_clean)} lignes")
     """
     initial_count = len(dataframe)
     
@@ -514,8 +514,8 @@ def remove_identifier_columns(
         pd.DataFrame: DataFrame sans les colonnes identifiantes
         
     Example:
-        >>> df_clean = remove_identifier_columns(df)
-        >>> print(f"Colonnes restantes: {df_clean.shape[1]}")
+         df_clean = remove_identifier_columns(df)
+         print(f"Colonnes restantes: {df_clean.shape[1]}")
     """
     if columns_to_remove is None:
         columns_to_remove = [
@@ -563,8 +563,8 @@ def encode_categorical_columns(
             dictionnaire des encoders utilisés
         
     Example:
-        >>> df_encoded, encoders = encode_categorical_columns(df)
-        >>> print(f"Encoders disponibles: {list(encoders.keys())}")
+         df_encoded, encoders = encode_categorical_columns(df)
+         print(f"Encoders disponibles: {list(encoders.keys())}")
     """
     from sklearn.preprocessing import LabelEncoder
     
@@ -627,15 +627,15 @@ def normalize_numeric_columns(
             scaler utilisé pour la transformation
         
     Example:
-        >>> df_normalized, scaler = normalize_numeric_columns(df)
-        >>> print(f"Colonnes normalisées: {len(scaler.feature_names_in_)}")
+         df_normalized, scaler = normalize_numeric_columns(df)
+         print(f"Colonnes normalisées: {len(scaler.feature_names_in_)}")
     """
     from sklearn.preprocessing import StandardScaler
     
     df_processed = dataframe.copy()
     
     if exclude_columns is None:
-        exclude_columns = ['next_adjusted_salary', 'adjusted_salary', 'Salary']
+        exclude_columns = ['next_adjusted_salary'] # , 'adjusted_salary', 'Salary'
     
     # Identifier les colonnes numériques
     numeric_columns = df_processed.select_dtypes(
@@ -686,8 +686,8 @@ def check_missing_values(
             le nombre initial de valeurs manquantes par colonne
         
     Example:
-        >>> df_clean, missing = check_missing_values(df)
-        >>> print(f"Colonnes avec NaN: {len(missing[missing > 0])}")
+         df_clean, missing = check_missing_values(df)
+         print(f"Colonnes avec NaN: {len(missing[missing > 0])}")
     """
     df_processed = dataframe.copy()
     initial_count = len(df_processed)
@@ -763,9 +763,9 @@ def preprocess_pipeline(
             les encoders et le scaler utilisés
         
     Example:
-        >>> df_preprocessed, artifacts = preprocess_pipeline(df, verbose=True)
-        >>> print(f"Shape finale: {df_preprocessed.shape}")
-        >>> print(f"Artifacts: {list(artifacts.keys())}")
+         df_preprocessed, artifacts = preprocess_pipeline(df, verbose=True)
+         print(f"Shape finale: {df_preprocessed.shape}")
+         print(f"Artifacts: {list(artifacts.keys())}")
     """
     if verbose:
         print("=" * 80)
