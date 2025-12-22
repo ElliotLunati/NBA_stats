@@ -11,5 +11,10 @@ requests
 
 # Data Analysis
 pandas
+numpy
 scikit-learn
 matplotlib
+seaborn
+statsmodels
+lightgbm
+xgboost
