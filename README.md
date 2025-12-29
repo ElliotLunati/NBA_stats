@@ -2,6 +2,25 @@
 
 Ce projet analyse les **déterminants du salaire des joueurs NBA sur les 25 dernières années** en combinant collecte de données, analyse statistique et modélisation prédictive par Machine Learning.
 
+## Installation
+
+### Prérequis
+- Python 3.7 ou supérieur
+- Google Chrome (pour le scraping avec Selenium)
+
+### Étapes
+
+1. **Cloner le projet**
+```bash
+git clone https://github.com/ElliotLunati/NBA_stats.git
+cd NBA_stats
+```
+
+2. **Installer les dépendances**
+```bash
+pip install -r requirements.txt
+```
+
 ## Problématique
 
 **Quels sont les déterminants du salaire en NBA sur les 25 dernières années ?**
@@ -11,8 +30,8 @@ L'objectif est d'identifier si les performances sur le terrain des joueurs ont u
 ## Fonctionnalités principales
 
 ### 1. Collecte automatique de données
-- **Stats des joueurs** : De 1996-97 à 2024-25 (Regular Season + Playoffs)
-- **Stats des équipes** : De 1996-97 à 2024-25 (Regular Season + Playoffs)
+- **Stats des joueurs** : De 1996-97 à 2024-25 (Regular Season)
+- **Stats des équipes** : De 1996-97 à 2024-25 (Regular Season)
 - **Salaires** : De 1999-00 à 2024-25 (scraping ESPN avec Selenium)
 - **Historique MVP** : Depuis 1956 (scraping Basketball Reference)
 
@@ -36,17 +55,18 @@ L'objectif est d'identifier si les performances sur le terrain des joueurs ont u
   - RandomForestRegressor
 - **Prédiction du salaire année n+1** à partir des performances année n
 - **Feature importance** : Identification des métriques les plus déterminantes
-- **Performance** : R² ~ 0.85 avec salaire précédent, R² ~ 0.75 sans salaire précédent
+- **Performance** : R² ~ 0.83 avec salaire précédent, R² ~ 0.75 sans salaire précédent
 
 ## Structure du projet
 
 ```
 NBA_stats/
-├── main.ipynb                      # Notebook principal avec toute l'analyse
-├── build_nba_bdd.py               # Construction de la base de données
-├── clean_dataset_fun.py           # Nettoyage et preprocessing
-├── train_blended_model.py         # Entraînement du modèle blendé
-├── plot_func.py                   # Fonctions de visualisation
+├── main.ipynb                    # Notebook principal avec toute l'analyse
+├── src/                          # Dossier contenant toutes nos fonctions
+│   ├── build_nba_bdd.py               # Construction de la base de données
+│   ├── clean_dataset_fun.py           # Nettoyage et preprocessing
+│   ├── train_blended_model.py         # Entraînement du modèle blendé
+│   └── plot_func.py                   # Fonctions de visualisation
 ├── requirements.txt               # Dépendances Python
 ├── data/                          # Données collectées par saison
 │   ├── merged_data.csv           # Dataset final fusionné
@@ -57,23 +77,4 @@ NBA_stats/
 │   └── MVP/
 │       └── nba_mvp_history.csv
 └── README.md
-```
-
-## Installation
-
-### Prérequis
-- Python 3.7 ou supérieur
-- Google Chrome (pour le scraping avec Selenium)
-
-### Étapes
-
-1. **Cloner le projet**
-```bash
-git clone https://github.com/ElliotLunati/NBA_stats.git
-cd NBA_stats
-```
-
-2. **Installer les dépendances**
-```bash
-pip install -r requirements.txt
 ```

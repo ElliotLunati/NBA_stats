@@ -27,7 +27,8 @@ share/python-wheels/
 MANIFEST
 
 # Data files
-data/
+data/*
+!data/merged_data.csv
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
