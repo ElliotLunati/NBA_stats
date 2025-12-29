@@ -1,6 +1,31 @@
 # NBA Stats - Analyse des déterminants du salaire en NBA
 
+*Auteurs : LUNATI Elliot et POULLAIN Gianni*
+
 Ce projet analyse les **déterminants du salaire des joueurs NBA sur les 25 dernières années** en combinant collecte de données, analyse statistique et modélisation prédictive par Machine Learning.
+
+## Problématique
+
+**Quels sont les déterminants du salaire en NBA sur les 25 dernières années ?**
+
+**Les salaires en NBA sont régulièrement critiqués**, jugés tantôt trop élevés : https://fanarch.com/blogs/nba/who-are-the-most-overpaid-nba-players-in-2025
+
+tantôt insuffisants selon les joueurs : 
+https://www.complex.com/sports/a/jose-martinez/steph-curry-thinks-nba-players-are-underpaid
+
+Ce projet vise à identifier les déterminants réels de ces rémunérations en analysant l'impact des performances sur le terrain sur l'évolution des salaires au cours de la carrière des joueurs.
+
+
+Pour répondre à cette problématique, nous avons collecté les statistiques de 10 000+ joueurs sur 25 saisons via l'API officielle NBA et du scraping. Afin de trouver les déterminants de l'évolution du salaire en NBA, nous avons conduit une analyse descriptive des données, et ensuite avons appliqué des techniques statistiques (régressions linéaires, LOWESS) et de Machine Learning (XGBoost, LightGBM, RandomForest) .
+
+### Résultats clés
+
+L'analyse démontre que **les salaires sont globalement en adéquation avec les performances mesurables** :
+- La relation salaire-performance n'est pas linéaire : l'effet marginal d'un point supplémentaire s'amplifie exponentiellement pour les superstars (>20 pts/match)
+- L'expérience des joueurs et le temps de jeu jouent un rôle important dans l'évolution des salaires, parfois plus que les performances en fonction des modèles
+- Les performances offensives semblent avoir plus d'impact sur le salaire que les performances défensives
+- Notre meilleur modèle atteint un **R² de 0.85** pour prédire le salaire de l'année suivante à partir des performances de l'année n-1.
+
 
 ## Installation
 
@@ -20,12 +45,6 @@ cd NBA_stats
 ```bash
 pip install -r requirements.txt
 ```
-
-## Problématique
-
-**Quels sont les déterminants du salaire en NBA sur les 25 dernières années ?**
-
-L'objectif est d'identifier si les performances sur le terrain des joueurs ont un impact significatif sur l'évolution de leur salaire au cours de leur carrière.
 
 ## Fonctionnalités principales
 
@@ -55,7 +74,7 @@ L'objectif est d'identifier si les performances sur le terrain des joueurs ont u
   - RandomForestRegressor
 - **Prédiction du salaire année n+1** à partir des performances année n
 - **Feature importance** : Identification des métriques les plus déterminantes
-- **Performance** : R² ~ 0.83 avec salaire précédent, R² ~ 0.75 sans salaire précédent
+- **Performance** : R² ~ 0.85 avec salaire précédent, R² ~ 0.75 sans salaire précédent
 
 ## Structure du projet
 
